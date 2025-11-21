@@ -124,6 +124,6 @@ docker run \
 * **Visualization Dashboard:** Connect the **Drift Score** output to a **Grafana** or **Streamlit** dashboard. This will provide a real-time "Pulse Check" of the system, visualizing how the Data Drift fluctuates over time.
 
 ### 🚀 Deep Learning & MLOps Expansions
-* **Model Drift (Concept Drift):** The system currently detects **Data Drift** (is the input weird?). The next phase is implementing **Model Drift** detection (is the model making mistakes?). This will involve creating a feedback loop to compare predictions against ground truth labels.
+* **Model Drift (Concept Drift):** The system currently detects **Data Drift** (is the input weird?). The next phase is implementing **Model Decay** detection (is the model making mistakes?). This will involve creating a feedback loop to compare predictions against ground truth labels.
 * **Horizontal Scaling (Model Agnosticism):** Once the VFI pipeline is perfected, I will generalize the architecture. The goal is to pull models directly from **Hugging Face** or **Kaggle**, wrap them in this standard container, and monitor them using the same Sentinel logic.
 * **A/B Testing:** Implement a **Canary Deployment** strategy, allowing the "Champion" model and the "Challenger" model to run side-by-side on live data to compare performance safely.
