@@ -29,6 +29,7 @@ jobs:
       
       - name: Run Drift Detection Container
         id: run_monitor
+        # Mount the data/drifted_frames to simulate the production data feed
         run: |
           docker run \
             -v ${{ github.workspace }}/data/drifted_frames:/app/incoming_data \
@@ -41,17 +42,20 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           STATUS=$(cat ${{ github.workspace }}/temp_status/status.txt)
+          SCORE=$(cat ${{ github.workspace }}/temp_status/score.txt) # NEW: Read the actual score
+          
           echo "QC Verdict: $STATUS"
+          echo "Detected Drift Score: $SCORE%"
 
           if [[ "$STATUS" == "FAIL" ]]; then
-            echo "::error::🚨 High Drift Detected! Triggering Model Retraining..."
+            echo "::error::🚨 High Drift Detected! Calling the Repair Crew..."
             
             # --- THE RED PHONE ---
-            # Use GitHub CLI to trigger the retraining pipeline
-            gh workflow run retraining_pipeline.yml -f drift_score="89.38"
+            # Use GitHub CLI to trigger the retraining pipeline, passing the actual score!
+            gh workflow run retraining_pipeline.yml -f drift_score="$SCORE"
             
             echo "✅ Retraining Triggered. Marking this monitor run as Failed to alert humans."
-            exit 1
+            exit 1 
           else
             echo "✅ Data is good. Factory running smoothly."
           fi
