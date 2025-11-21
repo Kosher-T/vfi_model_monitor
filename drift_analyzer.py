@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.stats import ks_2samp
 import os
-import matplotlib.pyplot as plt
 
 # --- CONFIGURATION ---
 BASELINE_FILE = 'baseline_embeddings.npy'
@@ -13,6 +12,7 @@ P_VALUE_THRESHOLD = 0.05
 def load_embeddings():
     """Loads the baseline and drifted embeddings from the .npy files."""
     try:
+        # In the production monitor, these files are loaded from the root /app folder.
         baseline = np.load(BASELINE_FILE)
         drifted = np.load(DRIFTED_FILE)
         
@@ -34,35 +34,31 @@ def load_embeddings():
 
 def analyze_drift(baseline, drifted):
     """
-    Performs the Kolmogorov-Smirnov (KS) Test feature-by-feature 
-    to quantify distribution drift.
+    Performs the Kolmogorov-Smirnov (KS) two-sample test feature-by-feature.
+    The drift score is the percentage of features that show significant statistical difference.
     """
     num_features = baseline.shape[1]
-    
-    # Store results for plotting and threshold setting
     significant_drift_count = 0
-    p_values = []
-    
-    print(f"\n--- Running KS Test on {num_features} features ---")
+    p_values = [] # Not used in production, but good to collect
 
-    # Iterate through each of the 1280 features (columns)
+    # 1. Iterate through every feature (1280 of them)
     for i in range(num_features):
-        baseline_feature = baseline[:, i] # All values for feature 'i' in baseline data
-        drifted_feature = drifted[:, i]   # All values for feature 'i' in drifted data
+        # 2. Get the distribution of values for this feature in both sets
+        baseline_feature = baseline[:, i]
+        drifted_feature = drifted[:, i]
         
-        # ks_2samp returns a statistic (D) and a p-value
-        # The p-value tells us the probability that the two distributions are the same.
-        statistic, p_value = ks_2samp(baseline_feature, drifted_feature)
+        # 3. Perform the KS test
+        # We only care about the p-value
+        _, p_value = ks_2samp(baseline_feature, drifted_feature)
         p_values.append(p_value)
 
-        # If p-value < 0.05, we reject the null hypothesis (they are the same)
-        # This means the feature has statistically drifted.
+        # 4. Check for drift (p < 0.05 means distributions are different)
         if p_value < P_VALUE_THRESHOLD:
             significant_drift_count += 1
-            
-    # Calculate the overall "Drift Score"
+
+    # Calculate the drift score (percentage of features that drifted)
     drift_score = (significant_drift_count / num_features) * 100
-    
+
     print("\n--- Summary of Drift Detection ---")
     print(f"Total features analyzed: {num_features}")
     print(f"Features showing significant drift (p < {P_VALUE_THRESHOLD}): {significant_drift_count}")
@@ -70,27 +66,11 @@ def analyze_drift(baseline, drifted):
     
     return drift_score, p_values
 
-def plot_drift_histogram(p_values):
-    """Visualizes the distribution of p-values to help set a robust threshold."""
-    plt.figure(figsize=(10, 5))
-    plt.hist(p_values, bins=50, log=True, color='#007acc', edgecolor='black')
-    plt.axvline(P_VALUE_THRESHOLD, color='red', linestyle='dashed', linewidth=2, label=f'Drift Threshold (p={P_VALUE_THRESHOLD})')
-    plt.title('Distribution of Feature p-values (KS Test)')
-    plt.xlabel('P-value')
-    plt.ylabel('Number of Features (Log Scale)')
-    plt.legend()
-    plt.grid(axis='y', alpha=0.5)
-    plt.savefig('drift_analysis_histogram.png')
-    print("\nSaved histogram to 'drift_analysis_histogram.png'")
-
 
 if __name__ == "__main__":
+    # This block is for local development/testing only
     baseline, drifted = load_embeddings()
     
     if baseline is not None and drifted is not None:
-        drift_score, p_values = analyze_drift(baseline, drifted)
-        plot_drift_histogram(p_values)
-        
-        # This is your final metric to define the production threshold!
-        print("\nACTION REQUIRED: Based on this score, set your production alert threshold.")
-        print(f"  Since the 'Bad Data' scored {drift_score:.2f}%, you might set the alert trigger at 30-40%.")
+        drift_score, _ = analyze_drift(baseline, drifted)
+        print(f"Local Test Complete. Score: {drift_score:.2f}%")
