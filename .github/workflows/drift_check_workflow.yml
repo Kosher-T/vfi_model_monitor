@@ -3,11 +3,8 @@ name: Data Drift Monitor
 
 # 1. THE ALARM CLOCK (Triggers)
 on:
-  # Run automatically at 3:00 AM UTC every day
   schedule:
     - cron: '0 3 * * *'
-  
-  # Manual Button: Allows you to click "Run Now" in GitHub for demos
   workflow_dispatch:
 
 # 2. THE JOB (The Checklist)
@@ -16,12 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      # Step A: Get the latest "Wood" and "Blueprints" (Code)
       - name: Checkout Repository
         uses: actions/checkout@v4
       
-      # Step B: Build the QC Booth (Docker Container)
-      # This builds the container fresh on GitHub's server
       - name: Build QC Monitor Image
         id: docker_build
         uses: docker/build-push-action@v5
@@ -30,22 +24,19 @@ jobs:
           push: false
           tags: vfi-monitor:latest
       
-      # Step C: The Inspection
-      # We map a folder of images to the container.
-      # FOR DEMO PURPOSES: We point this to 'data/drifted_frames' to FORCE a failure/alert.
-      # In production, this would point to 'data/daily_uploads'.
       - name: Run Drift Detection Container
         id: run_monitor
+        # FIX: Mount the temp_status folder to /app/status_output
+        # This way, we don't overwrite the code in /app
         run: |
           docker run \
             -v ${{ github.workspace }}/data/drifted_frames:/app/incoming_data \
-            -v ${{ github.workspace }}/temp_status:/app \
+            -v ${{ github.workspace }}/temp_status:/app/status_output \
             vfi-monitor:latest
 
-      # Step D: The Verdict (Read the note passed out of the booth)
       - name: Check Status and Scream if Necessary
-        # The pipe character | below is crucial. It tells YAML "Everything below is a script"
         run: |
+          # Read the file from the mounted temp_status folder
           STATUS=$(cat ${{ github.workspace }}/temp_status/status.txt)
           echo "QC Verdict: $STATUS"
 
