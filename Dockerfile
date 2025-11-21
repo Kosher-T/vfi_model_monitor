@@ -2,7 +2,6 @@
 FROM python:3.9-slim
 
 # 1. Install system dependencies for OpenCV
-# CRUCIAL FIX: Replacing libgL with the common runtime libraries libgl1 and libsm6
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libsm6 \
@@ -12,21 +11,19 @@ RUN apt-get update && apt-get install -y \
 # 2. Set up the working directory inside the container
 WORKDIR /app
 
-# 3. Install Python libraries
+# 3. Install Python libraries (The SLOW step - CACHED)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 4. Copy your scripts AND your baseline memory
-# We copy everything in the current folder to /app
+# 4. Copy your scripts and baseline memory
 COPY drift_detector.py .
 COPY drift_analyzer.py .
 COPY monitoring_service.py .
-
-# IMPORTANT CHANGE: Copy baseline from the 'embeddings' subdirectory
 COPY embeddings/baseline_embeddings.npy . 
 
-# 5. Create a directory for incoming data (empty for now)
+# 5. Create directories for data and output
 RUN mkdir /app/incoming_data
+RUN mkdir /app/status_output
 
 # 6. The command to run when the container starts
 CMD ["python", "monitoring_service.py"]
