@@ -102,16 +102,20 @@ When drift is detected (*p-value* < 0.05), the system doesn't just alert—it ac
 ### 1. Build the Monitor:
 ```bash
 docker build -t vfi-monitor .
+```
 
 ### 2. Run the Saboteur (Create Bad Data):
 ```bash
 python data_saboteur.py
+```
 
 ### 3. Run the QC Check Manually:
+```bash
 docker run \
   -v $(pwd)/data/drifted_frames:/app/incoming_data \
   -v $(pwd)/temp_status:/app/status_output \
   vfi-monitor
+```
 
 ## 🔮 Future Improvements & Roadmap
 
