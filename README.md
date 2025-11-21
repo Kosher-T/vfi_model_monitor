@@ -113,6 +113,13 @@ docker run \
   -v $(pwd)/temp_status:/app/status_output \
   vfi-monitor
 
-## 🔮 Future Improvements
-* **Dashboarding:** Connect the **Drift Score** output to a **Grafana dashboard** for time-series visualization.
-* **A/B Testing:** Implement a **Canary Deployment** strategy for the retrained model.
+## 🔮 Future Improvements & Roadmap
+
+### 🛠️ Immediate Refinements (Next 3 Weeks)
+* **Configuration Decoupling:** Currently, parameters are hardcoded. I am moving all thresholds (e.g., `Drift Score > 30%`) and file paths into a central `config.yaml` or environment variables. This ensures the codebase is clean, reusable, and production-ready without needing to touch the core logic.
+* **Visualization Dashboard:** Connect the **Drift Score** output to a **Grafana** or **Streamlit** dashboard. This will provide a real-time "Pulse Check" of the system, visualizing how the Data Drift fluctuates over time.
+
+### 🚀 Deep Learning & MLOps Expansions
+* **Model Drift (Concept Drift):** The system currently detects **Data Drift** (is the input weird?). The next phase is implementing **Model Drift** detection (is the model making mistakes?). This will involve creating a feedback loop to compare predictions against ground truth labels.
+* **Horizontal Scaling (Model Agnosticism):** Once the VFI pipeline is perfected, I will generalize the architecture. The goal is to pull models directly from **Hugging Face** or **Kaggle**, wrap them in this standard container, and monitor them using the same Sentinel logic.
+* **A/B Testing:** Implement a **Canary Deployment** strategy, allowing the "Champion" model and the "Challenger" model to run side-by-side on live data to compare performance safely.
