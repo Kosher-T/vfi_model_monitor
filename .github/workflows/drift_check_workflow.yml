@@ -44,7 +44,7 @@ jobs:
           echo "QC Verdict: $STATUS"
 
           if [[ "$STATUS" == "FAIL" ]]; then
-            echo "::error::🚨 High Drift Detected! Calling the Repair Crew..."
+            echo "::error::🚨 High Drift Detected! Triggering Model Retraining..."
             
             # --- THE RED PHONE ---
             # Use GitHub CLI to trigger the retraining pipeline
