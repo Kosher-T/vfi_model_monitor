@@ -7,7 +7,6 @@ import drift_analyzer as analyzer
 # --- CONFIGURATION ---
 NEW_DATA_PATH = "/app/incoming_data"
 BASELINE_PATH = "baseline_embeddings.npy"
-# CHANGE: We write to a specific subfolder now
 OUTPUT_PATH = "/app/status_output/status.txt" 
 DRIFT_THRESHOLD = 30.0
 
@@ -41,14 +40,14 @@ def check_for_drift():
     print(f"\n>>> DRIFT SCORE: {score:.2f}%")
     print(f">>> THRESHOLD:   {DRIFT_THRESHOLD}%")
 
-    # CHANGE: Ensure the directory exists before writing
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
 
     if score > DRIFT_THRESHOLD:
         print("\n[FAIL] HIGH DRIFT DETECTED!")
         with open(OUTPUT_PATH, "w") as f:
             f.write("FAIL")
-        sys.exit(1)
+        # FIX: Exit with 0 (Success) so the GitHub Action continues to the next step!
+        sys.exit(0) 
     else:
         print("\n[PASS] Model is operating within normal parameters.")
         with open(OUTPUT_PATH, "w") as f:

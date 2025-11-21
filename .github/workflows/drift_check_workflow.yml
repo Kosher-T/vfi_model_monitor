@@ -51,7 +51,7 @@ jobs:
             gh workflow run retraining_pipeline.yml -f drift_score="89.38"
             
             echo "✅ Retraining Triggered. Marking this monitor run as Failed to alert humans."
-            exit 1 
+            exit 1
           else
             echo "✅ Data is good. Factory running smoothly."
           fi
