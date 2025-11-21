@@ -44,16 +44,14 @@ jobs:
 
       # Step D: The Verdict (Read the note passed out of the booth)
       - name: Check Status and Scream if Necessary
+        # The pipe character | below is crucial. It tells YAML "Everything below is a script"
         run: |
-          # Read the status file created by the Python script
           STATUS=$(cat ${{ github.workspace }}/temp_status/status.txt)
           echo "QC Verdict: $STATUS"
 
-          if [ "$STATUS" == "FAIL" ]; then
+          if [[ "$STATUS" == "FAIL" ]]; then
             echo "::error::🚨 High Drift Detected! The wood is bad!"
-            # This exit code 1 turns the GitHub Action RED ❌
             exit 1 
           else
             echo "✅ Data is good. Factory running smoothly."
           fi
-```
