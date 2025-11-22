@@ -6,7 +6,6 @@ on:
     - cron: '0 3 * * *'
   workflow_dispatch:
 
-# PERMISSION GRANT: Allow this job to trigger other workflows (The Red Phone)
 permissions:
   actions: write
   contents: read
@@ -29,33 +28,30 @@ jobs:
       
       - name: Run Drift Detection Container
         id: run_monitor
-        # Mount the data/drifted_frames to simulate the production data feed
+        # NEW: We inject configuration using environment variables (-e)
         run: |
           docker run \
+            -e DRIFT_THRESHOLD=30.0 \
+            -e P_VALUE_THRESHOLD=0.05 \
             -v ${{ github.workspace }}/data/drifted_frames:/app/incoming_data \
             -v ${{ github.workspace }}/temp_status:/app/status_output \
             vfi-monitor:latest
 
       - name: Check Status and Trigger Retraining
         env:
-          # Give the script access to the GitHub Token to make the call
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           STATUS=$(cat ${{ github.workspace }}/temp_status/status.txt)
-          SCORE=$(cat ${{ github.workspace }}/temp_status/score.txt) # NEW: Read the actual score
+          SCORE=$(cat ${{ github.workspace }}/temp_status/score.txt)
           
           echo "QC Verdict: $STATUS"
           echo "Detected Drift Score: $SCORE%"
 
           if [[ "$STATUS" == "FAIL" ]]; then
-            echo "::error::High Drift Detected! Calling the Repair Crew..."
-            
-            # --- THE RED PHONE ---
-            # Use GitHub CLI to trigger the retraining pipeline, passing the actual score!
+            echo "::error::🚨 High Drift Detected! Calling the Repair Crew..."
             gh workflow run retraining_pipeline.yml -f drift_score="$SCORE"
-            
-            echo "Retraining Triggered. Marking this monitor run as Failed to alert humans."
+            echo "✅ Retraining Triggered."
             exit 1 
           else
-            echo "Data is good. Factory running smoothly."
+            echo "✅ Data is good. Factory running smoothly."
           fi
