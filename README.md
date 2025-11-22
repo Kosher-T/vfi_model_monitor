@@ -61,7 +61,7 @@ graph TD
     
     %% Direct sequential actions based on Verdict
     G -->|"Triggers"| J["Trigger Retraining Pipeline"]
-    H -->|"Action"| K["🟢 Log Success"]
+    H -->|"Action"| K["Log Success"]
     
     J -->|Simulated| L["Fine-Tune Model on New Data"]
     L --> M["Deploy New Champion"]
