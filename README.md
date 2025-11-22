@@ -1,6 +1,6 @@
-# 🛰️ Sentinel: Automated VFI Model Monitoring & Self-Healing Pipeline
+# Sentinel: Automated VFI Model Monitoring & Self-Healing Pipeline
 
-## 📑 Table of Contents
+## Table of Contents
 
 - [The Architecture](#️-the-architecture)
 - [Project Status: The Simulation](#-project-status-the-simulation)
