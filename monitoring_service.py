@@ -4,16 +4,27 @@ import numpy as np
 import drift_detector as detector
 import drift_analyzer as analyzer
 
-# --- CONFIGURATION ---
-NEW_DATA_PATH = "/app/incoming_data"
-BASELINE_PATH = "baseline_embeddings.npy"
-OUTPUT_DIR = "/app/status_output"
+# --- CONFIGURATION (DECOUPLED) ---
+# We now fetch these from Environment Variables
+# Syntax: os.environ.get("VARIABLE_NAME", "DEFAULT_VALUE")
+
+NEW_DATA_PATH = os.environ.get("NEW_DATA_PATH", "/app/incoming_data")
+BASELINE_PATH = os.environ.get("BASELINE_PATH", "baseline_embeddings.npy")
+OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "/app/status_output")
+
+# Drift Threshold: Must convert string input to float
+try:
+    DRIFT_THRESHOLD = float(os.environ.get("DRIFT_THRESHOLD", "30.0"))
+except ValueError:
+    print("Error: DRIFT_THRESHOLD env var is not a valid number. Using default 30.0")
+    DRIFT_THRESHOLD = 30.0
+
+# Derived paths (no need to config these separately usually)
 STATUS_PATH = os.path.join(OUTPUT_DIR, "status.txt") 
-SCORE_PATH = os.path.join(OUTPUT_DIR, "score.txt") # NEW: Path for the drift score
-DRIFT_THRESHOLD = 30.0
+SCORE_PATH = os.path.join(OUTPUT_DIR, "score.txt")
 
 def check_for_drift():
-    print("--- STARTING MONITORING JOB ---")
+    print(f"--- STARTING MONITORING JOB (Threshold: {DRIFT_THRESHOLD}%) ---")
     
     if not os.path.exists(BASELINE_PATH):
         print(f"CRITICAL ERROR: Baseline file {BASELINE_PATH} not found.")
@@ -44,7 +55,6 @@ def check_for_drift():
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
-    # Save the score regardless of the result
     with open(SCORE_PATH, "w") as f:
         f.write(f"{score:.2f}")
 
@@ -52,7 +62,6 @@ def check_for_drift():
         print("\n[FAIL] HIGH DRIFT DETECTED!")
         with open(STATUS_PATH, "w") as f:
             f.write("FAIL")
-        # Exit 0 so GitHub Actions continues to the next step to read the output
         sys.exit(0) 
     else:
         print("\n[PASS] Model is operating within normal parameters.")
